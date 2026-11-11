@@ -1,0 +1,1053 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>QuizLab IA - Producción y Normalización de Materiales Académicos</title>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Google Fonts & Font Awesome -->
+    <link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@300;400;600;700&family=Outfit:wght@400;600;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- QR Code Generator -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+    <!-- Canvas Confetti -->
+    <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
+
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        brandPink: '#FF69B4',
+                        brandLightPink: '#FFB6C1',
+                        brandHotPink: '#FF1493',
+                        brandYellow: '#FFDE59',
+                        brandBrightYellow: '#FFF200',
+                        brandDarkYellow: '#E6C200',
+                        brandPurple: '#8A2BE2',
+                        brandCyan: '#00F5D4',
+                        labBg: '#FFF0F5'
+                    },
+                    fontFamily: {
+                        fredoka: ['Fredoka', 'sans-serif'],
+                        outfit: ['Outfit', 'sans-serif']
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        body {
+            font-family: 'Fredoka', sans-serif;
+            background-color: #FFF0F5;
+            background-image: radial-gradient(#FFB6C1 1.5px, transparent 1.5px), radial-gradient(#FFDE59 1.5px, #FFF0F5 1.5px);
+            background-size: 60px 60px;
+            background-position: 0 0, 30px 30px;
+        }
+
+        .science-card {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            border: 4px solid #FF69B4;
+            box-shadow: 8px 8px 0px #FFDE59, 12px 12px 0px #FF1493;
+            border-radius: 2rem;
+        }
+
+        .science-btn {
+            transition: all 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            box-shadow: 0px 6px 0px rgba(0,0,0,0.2);
+        }
+        .science-btn:hover {
+            transform: translateY(-3px);
+            box-shadow: 0px 9px 0px rgba(0,0,0,0.2);
+        }
+        .science-btn:active {
+            transform: translateY(2px);
+            box-shadow: 0px 2px 0px rgba(0,0,0,0.2);
+        }
+
+        @keyframes float {
+            0% { transform: translateY(0px) rotate(0deg); }
+            50% { transform: translateY(-12px) rotate(5deg); }
+            100% { transform: translateY(0px) rotate(0deg); }
+        }
+        .floating-icon { animation: float 4s ease-in-out infinite; }
+        .floating-icon-delayed { animation: float 5s ease-in-out 2s infinite; }
+
+        ::-webkit-scrollbar { width: 12px; }
+        ::-webkit-scrollbar-track { background: #FFE4E1; border-radius: 10px; }
+        ::-webkit-scrollbar-thumb { background: #FF69B4; border-radius: 10px; border: 3px solid #FFE4E1; }
+    </style>
+</head>
+<body class="min-h-screen text-slate-800 flex flex-col justify-between pb-10">
+
+    <!-- TOP HEADER / NAVBAR -->
+    <header class="w-full bg-white border-b-4 border-brandPink shadow-md sticky top-0 z-50 px-4 py-3">
+        <div class="max-w-7xl mx-auto flex flex-wrap items-center justify-between gap-4">
+            
+            <div class="flex items-center space-x-3 cursor-pointer" onclick="switchTab('nav-home')">
+                <div class="w-12 h-12 bg-brandYellow border-2 border-slate-900 rounded-2xl flex items-center justify-center text-brandHotPink text-2xl shadow-md floating-icon">
+                    <i class="fa-solid fa-flask-vial"></i>
+                </div>
+                <div>
+                    <h1 class="text-2xl font-extrabold text-brandHotPink leading-none tracking-wide">QuizLab <span class="text-brandDarkYellow">IA</span></h1>
+                    <p class="text-xs font-semibold text-slate-500">Normalización de Materiales Académicos</p>
+                </div>
+            </div>
+
+            <!-- Navigation Tabs -->
+            <nav class="flex items-center gap-2 bg-pink-100 p-1.5 rounded-2xl border-2 border-brandPink text-xs sm:text-sm font-bold">
+                <button id="tab-home" onclick="switchTab('nav-home')" class="px-4 py-2 rounded-xl transition bg-brandHotPink text-white shadow">
+                    <i class="fa-solid fa-house mr-1"></i> Inicio / Acceso
+                </button>
+                <button id="tab-quiz" onclick="switchTab('nav-quiz')" class="px-4 py-2 rounded-xl transition text-slate-700 hover:bg-pink-200">
+                    <i class="fa-solid fa-gamepad mr-1"></i> Evaluador
+                </button>
+                <button id="tab-leaderboard" onclick="switchTab('nav-leaderboard')" class="px-4 py-2 rounded-xl transition text-slate-700 hover:bg-pink-200">
+                    <i class="fa-solid fa-trophy mr-1"></i> Cómputo Notas <span id="live-badge" class="ml-1 px-1.5 py-0.5 bg-green-500 text-white rounded-full text-[10px]">LIVE</span>
+                </button>
+                <button id="tab-bank" onclick="switchTab('nav-bank')" class="px-4 py-2 rounded-xl transition text-slate-700 hover:bg-pink-200">
+                    <i class="fa-solid fa-book-open mr-1"></i> Banco 100 Preguntas
+                </button>
+            </nav>
+
+            <!-- Audio & Volume Controls -->
+            <div class="flex items-center space-x-3 bg-yellow-100 border-2 border-brandDarkYellow px-3 py-1.5 rounded-2xl">
+                <button id="btn-audio" onclick="toggleAudio()" class="text-brandHotPink hover:scale-110 transition text-xl">
+                    <i class="fa-solid fa-volume-xmark" id="audio-icon"></i>
+                </button>
+                <div class="flex flex-col">
+                    <span class="text-[10px] uppercase font-bold text-slate-600">Volumen Lab (Alto)</span>
+                    <input type="range" id="volume-control" min="0" max="1" step="0.1" value="0.9" onchange="updateVolume(this.value)" class="w-20 accent-brandHotPink cursor-pointer">
+                </div>
+            </div>
+
+        </div>
+    </header>
+
+    <!-- FLOATING DECORATIVE ICONS -->
+    <div class="fixed top-24 left-6 text-brandPink opacity-30 text-5xl pointer-events-none floating-icon">
+        <i class="fa-solid fa-atom"></i>
+    </div>
+    <div class="fixed bottom-12 right-8 text-brandYellow opacity-40 text-6xl pointer-events-none floating-icon-delayed">
+        <i class="fa-solid fa-dna"></i>
+    </div>
+
+    <!-- MAIN CONTAINER -->
+    <main class="max-w-6xl mx-auto w-full px-4 mt-6 flex-grow">
+
+        <!-- ================= SECCIÓN 1: INICIO & REGISTRO ================= -->
+        <section id="nav-home" class="tab-content space-y-8">
+            <div class="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
+                
+                <!-- Registration Form -->
+                <div class="lg:col-span-7 science-card p-6 sm:p-8">
+                    <div class="flex items-center space-x-3 mb-4">
+                        <div class="p-3 bg-brandYellow rounded-xl border-2 border-slate-800 text-brandHotPink text-xl">
+                            <i class="fa-solid fa-id-card"></i>
+                        </div>
+                        <h2 class="text-2xl font-bold text-slate-800">Registro de Equipo y Participantes</h2>
+                    </div>
+                    <p class="text-slate-600 text-sm mb-6">
+                        Ingresa los detalles de tu equipo. Al comenzar, se asignarán 20 preguntas aleatorias (Fácil, Medio, Avanzado) con un límite estricto de 2 minutos por pregunta. <strong class="text-brandHotPink">Intento único garantizado por dispositivo.</strong>
+                    </p>
+
+                    <form id="form-registration" onsubmit="startQuiz(event)" class="space-y-4">
+                        <div>
+                            <label class="block text-sm font-bold text-slate-700 mb-1">Nombre del Equipo / Grupo <span class="text-brandHotPink">*</span></label>
+                            <input type="text" id="input-team-name" required placeholder="Ej. Los Átomos de la IA" 
+                                class="w-full px-4 py-3 rounded-xl border-2 border-pink-300 focus:border-brandHotPink focus:ring-2 focus:ring-brandPink outline-none transition font-semibold text-slate-700">
+                        </div>
+
+                        <div>
+                            <label class="block text-sm font-bold text-slate-700 mb-1">Lista de Integrantes (Separados por coma) <span class="text-brandHotPink">*</span></label>
+                            <textarea id="input-members" required rows="3" placeholder="Ej. Juan Pérez, María Gómez, Carlos Ruiz" 
+                                class="w-full px-4 py-3 rounded-xl border-2 border-pink-300 focus:border-brandHotPink focus:ring-2 focus:ring-brandPink outline-none transition font-semibold text-slate-700"></textarea>
+                        </div>
+
+                        <div class="p-4 bg-yellow-50 border-2 border-brandYellow rounded-xl text-xs text-slate-600 space-y-1">
+                            <p class="font-bold text-slate-800"><i class="fa-solid fa-triangle-exclamation text-brandHotPink"></i> Reglas de Integridad:</p>
+                            <ul class="list-disc list-inside space-y-1">
+                                <li>Las calificaciones se sincronizan y centralizan en el ordenador del docente.</li>
+                                <li>No está permitido salir de la página ni refrescar durante la evaluación (se bloqueará el reingreso con el mismo equipo).</li>
+                            </ul>
+                        </div>
+
+                        <button type="submit" class="w-full py-4 bg-brandHotPink hover:bg-pink-600 text-white font-extrabold text-lg rounded-xl science-btn uppercase tracking-wide flex items-center justify-center space-x-2">
+                            <span><i class="fa-solid fa-vial-circle-check"></i> Iniciar Cuestionario Online</span>
+                        </button>
+                    </form>
+                </div>
+
+                <!-- QR & Sharing Hub -->
+                <div class="lg:col-span-5 science-card p-6 sm:p-8 bg-amber-50/90 border-brandYellow flex flex-col items-center text-center">
+                    <div class="w-12 h-12 bg-brandPink text-white rounded-2xl flex items-center justify-center text-xl shadow mb-3">
+                        <i class="fa-solid fa-qrcode"></i>
+                    </div>
+                    <h3 class="text-xl font-bold text-slate-800 mb-1">Enlace y Código QR Compartible</h3>
+                    <p class="text-xs text-slate-600 mb-4">Comparte este QR o link para que los estudiantes ingresen desde sus teléfonos o laptops.</p>
+
+                    <!-- QR Box -->
+                    <div id="qrcode" class="p-4 bg-white border-4 border-brandYellow rounded-2xl shadow-inner mb-4 flex justify-center items-center"></div>
+
+                    <!-- Copy Link Input -->
+                    <div class="w-full flex items-center space-x-2 mb-4">
+                        <input type="text" id="share-link-input" readonly class="w-full text-xs px-3 py-2 border-2 border-slate-300 rounded-lg bg-slate-50 text-slate-600 outline-none">
+                        <button onclick="copyShareLink()" class="px-3 py-2 bg-brandYellow hover:bg-brandDarkYellow text-slate-900 font-bold text-xs rounded-lg science-btn whitespace-nowrap">
+                            <i class="fa-solid fa-copy"></i> Copiar
+                        </button>
+                    </div>
+
+                    <div class="text-xs text-slate-500 bg-white p-3 rounded-xl border border-pink-200">
+                        <i class="fa-solid fa-database text-brandHotPink"></i> Conexión en la nube centralizada activa para el profesor.
+                    </div>
+                </div>
+
+            </div>
+        </section>
+
+
+        <!-- ================= SECCIÓN 2: CUESTIONARIO EVALUADOR ================= -->
+        <section id="nav-quiz" class="tab-content hidden space-y-6">
+            
+            <div id="quiz-not-started" class="science-card p-12 text-center space-y-4 max-w-xl mx-auto">
+                <div class="w-20 h-20 bg-brandYellow rounded-full flex items-center justify-center text-4xl text-brandHotPink mx-auto">
+                    <i class="fa-solid fa-lock"></i>
+                </div>
+                <h3 class="text-2xl font-bold text-slate-800">Evaluación no Iniciada</h3>
+                <p class="text-slate-600 text-sm">Registra tu equipo en la pestaña "Inicio" para habilitar tu evaluación aleatoria.</p>
+                <button onclick="switchTab('nav-home')" class="px-6 py-3 bg-brandHotPink text-white font-bold rounded-xl science-btn">
+                    Ir al Registro
+                </button>
+            </div>
+
+            <!-- Active Quiz Container -->
+            <div id="quiz-active-container" class="hidden space-y-6">
+                
+                <div class="science-card p-4 bg-white flex flex-wrap items-center justify-between gap-4">
+                    <div>
+                        <span class="text-xs font-bold text-slate-400 uppercase tracking-wider block">Equipo</span>
+                        <h4 id="hud-team-name" class="text-lg font-extrabold text-brandHotPink">--</h4>
+                    </div>
+
+                    <div class="text-center">
+                        <span class="text-xs font-bold text-slate-400 uppercase tracking-wider block">Pregunta</span>
+                        <span id="hud-progress" class="text-lg font-extrabold text-slate-800 bg-yellow-200 px-3 py-1 rounded-xl">1 / 20</span>
+                    </div>
+
+                    <div class="text-center">
+                        <span class="text-xs font-bold text-slate-400 uppercase tracking-wider block">Nivel</span>
+                        <span id="hud-difficulty" class="text-xs font-extrabold px-3 py-1.5 rounded-full text-white bg-green-500 uppercase">Fácil</span>
+                    </div>
+
+                    <!-- Timer Bar -->
+                    <div class="flex items-center space-x-3 bg-red-50 border-2 border-red-300 px-4 py-2 rounded-2xl">
+                        <i class="fa-solid fa-stopwatch text-red-500 text-2xl animate-pulse"></i>
+                        <div>
+                            <span class="text-[10px] font-extrabold text-red-500 uppercase block">Cronómetro Regresivo</span>
+                            <span id="hud-timer" class="text-xl font-extrabold text-red-600 font-mono">02:00</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Lifelines -->
+                <div class="flex justify-center items-center gap-4 flex-wrap">
+                    <span class="text-xs font-bold text-slate-500">COMODINES:</span>
+                    <button id="lifeline-5050" onclick="useLifeline5050()" class="px-4 py-2 bg-brandYellow hover:bg-yellow-300 border-2 border-slate-900 rounded-xl font-bold text-xs science-btn flex items-center gap-1">
+                        <i class="fa-solid fa-scissors"></i> 50:50
+                    </button>
+                    <button id="lifeline-time" onclick="useLifelineTime()" class="px-4 py-2 bg-brandPink hover:bg-pink-400 text-white border-2 border-slate-900 rounded-xl font-bold text-xs science-btn flex items-center gap-1">
+                        <i class="fa-solid fa-hourglass-plus"></i> +30 Seg
+                    </button>
+                    <button id="lifeline-hint" onclick="useLifelineHint()" class="px-4 py-2 bg-purple-400 hover:bg-purple-500 text-white border-2 border-slate-900 rounded-xl font-bold text-xs science-btn flex items-center gap-1">
+                        <i class="fa-solid fa-lightbulb"></i> Pista IA
+                    </button>
+                </div>
+
+                <div id="hint-box" class="hidden p-4 bg-purple-100 border-2 border-purple-400 rounded-xl text-xs text-purple-900 font-semibold animate-bounce">
+                    <i class="fa-solid fa-robot mr-1"></i> <strong>Pista del Asistente IA:</strong> <span id="hint-text"></span>
+                </div>
+
+                <div class="science-card p-6 sm:p-10 bg-white space-y-6">
+                    <h3 id="question-text" class="text-xl sm:text-2xl font-bold text-slate-800 leading-snug">
+                        Cargando pregunta...
+                    </h3>
+
+                    <div id="options-container" class="grid grid-cols-1 md:grid-cols-2 gap-4"></div>
+
+                    <div class="flex justify-end pt-4">
+                        <button id="btn-next-question" onclick="nextQuestion()" disabled class="px-8 py-3 bg-slate-300 text-slate-500 font-extrabold rounded-xl text-base science-btn transition cursor-not-allowed">
+                            Siguiente Pregunta <i class="fa-solid fa-arrow-right ml-2"></i>
+                        </button>
+                    </div>
+                </div>
+
+            </div>
+
+            <!-- Quiz Result View -->
+            <div id="quiz-results-container" class="hidden science-card p-8 bg-white text-center space-y-6 max-w-2xl mx-auto">
+                <div class="w-24 h-24 bg-brandYellow border-4 border-slate-800 rounded-full flex items-center justify-center text-5xl text-brandHotPink mx-auto floating-icon">
+                    <i class="fa-solid fa-award"></i>
+                </div>
+                <h2 class="text-3xl font-extrabold text-slate-800">¡Evaluación Enviada y Registrada!</h2>
+                <p class="text-slate-600 font-semibold">Tus resultados han sido enviados al ordenador central del profesor.</p>
+
+                <div class="bg-pink-50 p-6 rounded-2xl border-2 border-brandPink text-left space-y-2">
+                    <p class="text-sm font-bold text-slate-700"><strong>Equipo:</strong> <span id="res-team-name" class="text-brandHotPink"></span></p>
+                    <p class="text-xs text-slate-600"><strong>Integrantes:</strong> <span id="res-team-members"></span></p>
+                    <hr class="border-pink-200 my-2">
+                    <div class="flex justify-between items-center text-lg font-extrabold">
+                        <span>Puntaje Obtenido:</span>
+                        <span id="res-score" class="text-3xl text-brandHotPink font-black">0 / 20 pts</span>
+                    </div>
+                    <div class="flex justify-between items-center text-xs font-semibold text-slate-500">
+                        <span>Tiempo de resolución:</span>
+                        <span id="res-time">00:00</span>
+                    </div>
+                </div>
+
+                <div class="flex flex-wrap justify-center gap-4">
+                    <button onclick="switchTab('nav-leaderboard')" class="px-6 py-3 bg-brandYellow hover:bg-brandDarkYellow text-slate-900 font-bold rounded-xl science-btn">
+                        <i class="fa-solid fa-trophy"></i> Ver Cómputo General en Directo
+                    </button>
+                </div>
+            </div>
+
+        </section>
+
+
+        <!-- ================= SECCIÓN 3: PUNTUACIONES / LEADERBOARD ================= -->
+        <section id="nav-leaderboard" class="tab-content hidden space-y-6">
+            <div class="science-card p-6 sm:p-8 bg-white">
+                
+                <div class="flex flex-wrap items-center justify-between gap-4 mb-6">
+                    <div class="flex items-center space-x-3">
+                        <div class="w-10 h-10 bg-brandYellow rounded-xl flex items-center justify-center text-brandHotPink text-xl font-bold border border-slate-900">
+                            <i class="fa-solid fa-ranking-star"></i>
+                        </div>
+                        <div>
+                            <h2 class="text-2xl font-extrabold text-slate-800">Cómputo Centralizado de Notas</h2>
+                            <p class="text-xs text-slate-500">Notas de estudiantes conectadas en tiempo real</p>
+                        </div>
+                    </div>
+
+                    <button onclick="downloadCSVReport()" class="px-4 py-2.5 bg-green-500 hover:bg-green-600 text-white font-bold text-sm rounded-xl science-btn flex items-center gap-2">
+                        <i class="fa-solid fa-file-excel"></i> Descargar Reporte Completo (CSV/Excel)
+                    </button>
+                </div>
+
+                <div class="overflow-x-auto rounded-2xl border-2 border-pink-200">
+                    <table class="w-full text-left text-sm text-slate-700">
+                        <thead class="bg-pink-100 text-brandHotPink font-extrabold uppercase text-xs">
+                            <tr>
+                                <th class="px-4 py-3">#</th>
+                                <th class="px-4 py-3">Nombre del Equipo</th>
+                                <th class="px-4 py-3">Integrantes del Equipo</th>
+                                <th class="px-4 py-3 text-center">Puntaje (/20)</th>
+                                <th class="px-4 py-3 text-center">Tiempo Usado</th>
+                                <th class="px-4 py-3 text-center">Fecha / Registro</th>
+                            </tr>
+                        </thead>
+                        <tbody id="leaderboard-body" class="divide-y divide-pink-100 bg-white font-medium">
+                            <tr><td colspan="6" class="text-center py-6 text-slate-400">Cargando registros centralizados...</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+
+            </div>
+        </section>
+
+
+        <!-- ================= SECCIÓN 4: BANCO COMPLETO 100 PREGUNTAS ================= -->
+        <section id="nav-bank" class="tab-content hidden space-y-6">
+            <div class="science-card p-6 sm:p-8 bg-white space-y-6">
+                
+                <div class="flex flex-wrap items-center justify-between gap-4 border-b-2 border-pink-100 pb-4">
+                    <div>
+                        <h2 class="text-2xl font-extrabold text-slate-800">Banco de 100 Preguntas - Tema 2</h2>
+                        <p class="text-xs text-slate-500">"Producción y Normalización de Materiales Académicos con Inteligencia Artificial"</p>
+                    </div>
+
+                    <div class="flex items-center gap-2">
+                        <button onclick="filterBank('all')" class="px-3 py-1.5 rounded-xl text-xs font-bold bg-brandHotPink text-white">Todas (100)</button>
+                        <button onclick="filterBank('facil')" class="px-3 py-1.5 rounded-xl text-xs font-bold bg-green-100 text-green-700">Fácil</button>
+                        <button onclick="filterBank('medio')" class="px-3 py-1.5 rounded-xl text-xs font-bold bg-yellow-100 text-yellow-800">Medio</button>
+                        <button onclick="filterBank('avanzado')" class="px-3 py-1.5 rounded-xl text-xs font-bold bg-red-100 text-red-700">Avanzado</button>
+                    </div>
+                </div>
+
+                <div id="questions-bank-list" class="space-y-4 max-h-[600px] overflow-y-auto pr-2"></div>
+
+            </div>
+        </section>
+
+    </main>
+
+    <!-- FOOTER -->
+    <footer class="mt-12 text-center text-xs text-slate-500 font-semibold">
+        <p>© 2026 QuizLab IA | Sistema Académico Centralizado para Docentes y Estudiantes</p>
+    </footer>
+
+    <!-- FIREBASE SDKS -->
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
+        import { getAuth, signInAnonymously, signInWithCustomToken } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
+        import { getFirestore, collection, addDoc, onSnapshot } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+
+        // Global Firebase configuration
+        const appId = typeof __app_id !== 'undefined' ? __app_id : 'quizlab-ia-default';
+        const firebaseConfig = typeof __firebase_config !== 'undefined' ? JSON.parse(__firebase_config) : {
+            apiKey: "AIzaSyDummyKeyForLocalSandboxSync12345",
+            authDomain: "quizlab-sandbox.firebaseapp.com",
+            projectId: "quizlab-sandbox",
+            storageBucket: "quizlab-sandbox.appspot.com",
+            messagingSenderId: "1234567890",
+            appId: "1:1234567890:web:abcdef"
+        };
+
+        let app, db, auth, userId = null;
+        window.isFirebaseConnected = false;
+
+        try {
+            app = initializeApp(firebaseConfig);
+            db = getFirestore(app);
+            auth = getAuth(app);
+
+            const initAuth = async () => {
+                if (typeof __initial_auth_token !== 'undefined' && __initial_auth_token) {
+                    await signInWithCustomToken(auth, __initial_auth_token);
+                } else {
+                    await signInAnonymously(auth);
+                }
+                userId = auth.currentUser?.uid || crypto.randomUUID();
+                window.isFirebaseConnected = true;
+                initRealtimeLeaderboard(db, appId);
+            };
+            initAuth();
+        } catch(e) {
+            console.warn("Firebase running in local fallback mode:", e);
+            initLocalFallbackLeaderboard();
+        }
+
+        // Expose save function globally
+        window.saveQuizResultToCloud = async function(record) {
+            if (window.isFirebaseConnected && db) {
+                try {
+                    await addDoc(collection(db, 'artifacts', appId, 'public', 'data', 'scores'), {
+                        ...record,
+                        timestamp: Date.now()
+                    });
+                    return;
+                } catch(e) { console.error("Error saving to cloud:", e); }
+            }
+            // Local fallback
+            let current = JSON.parse(localStorage.getItem('quizlab_leaderboard') || '[]');
+            current.unshift(record);
+            localStorage.setItem('quizlab_leaderboard', JSON.stringify(current));
+            window.renderLeaderboardUI(current);
+        };
+
+        function initRealtimeLeaderboard(db, appId) {
+            try {
+                const qCol = collection(db, 'artifacts', appId, 'public', 'data', 'scores');
+                onSnapshot(qCol, (snapshot) => {
+                    let list = [];
+                    snapshot.forEach(docSnap => {
+                        list.push(docSnap.data());
+                    });
+                    // Sort by score desc, time asc
+                    list.sort((a, b) => b.score - a.score);
+                    window.renderLeaderboardUI(list);
+                    window.currentCloudScores = list;
+                }, (error) => {
+                    console.error("Snapshot error:", error);
+                    initLocalFallbackLeaderboard();
+                });
+            } catch(e) {
+                initLocalFallbackLeaderboard();
+            }
+        }
+
+        function initLocalFallbackLeaderboard() {
+            let saved = JSON.parse(localStorage.getItem('quizlab_leaderboard') || '[]');
+            window.renderLeaderboardUI(saved);
+            window.currentCloudScores = saved;
+        }
+    </script>
+
+    <!-- SCRIPT LOGIC & QUESTION DATABASE -->
+    <script>
+        const QUESTION_BANK = [
+            // FÁCIL (1-35)
+            { id: 1, level: 'facil', q: "¿Qué es el Prompt Engineering en la producción académica con IA?", options: ["El diseño de componentes físicos de la PC", "La formulación estructurada de instrucciones para modelos de IA", "Un lenguaje de programación visual", "La eliminación manual de virus informáticos"], answer: 1, hint: "Se refiere a redactar buenas instrucciones." },
+            { id: 2, level: 'facil', q: "¿Cuál es un objetivo clave de la normalización de materiales académicos?", options: ["Impedir el acceso digital", "Garantizar calidad, coherencia y estándares éticos", "Aumentar el precio de venta de los libros", "Eliminar la revisión por pares"], answer: 1, hint: "Busca mantener estándar de calidad y coherencia." },
+            { id: 3, level: 'facil', q: "¿Qué es la 'alucinación' en los modelos de lenguaje de IA?", options: ["Un virus informático", "Generación de información falsa o inventada con apariencia de verdad", "La velocidad máxima de procesamiento", "Un filtro de seguridad de hardware"], answer: 1, hint: "Ocurre cuando la IA inventa datos ficticios." },
+            { id: 4, level: 'facil', q: "¿Qué significa las siglas APA en la normalización bibliográfica?", options: ["Academic Performance Association", "American Psychological Association", "Automated Publishing Agent", "Advanced Processing Algorithm"], answer: 1, hint: "Asociación de Psicología referente a normas de cita." },
+            { id: 5, level: 'facil', q: "La IA generativa se caracteriza principalmente por:", options: ["Reparar impresoras automáticamente", "Crear nuevo contenido (texto, imágenes, código) a partir de datos", "Ejecutar cálculos aritméticos únicamente", "Almacenar archivos físicamente"], answer: 1, hint: "Genera contenidos originales a partir de patrones." },
+            { id: 6, level: 'facil', q: "¿Qué función cumple el DOAJ en la investigación académica?", options: ["Directorio de Revistas de Acceso Abierto", "Un software de edición fotográfica", "Un procesador de texto comercial", "Una base de datos de patentes industriales"], answer: 0, hint: "Directorio internacional de open access." },
+            { id: 7, level: 'facil', q: "¿Qué es un identificador DOI?", options: ["Digital Object Identifier para recursos digitales", "Document Online Index", "Data Operator Interface", "Direct Output Integration"], answer: 0, hint: "Enlace persistente para artículos y objetos digitales." },
+            { id: 8, level: 'facil', q: "¿Qué aspecto ético es fundamental al publicar material generado con ayuda de IA?", options: ["Ocultar el uso de la IA", "Declarar y transparentar la contribución de herramientas de IA", "Cobrar el doble por la publicación", "No incluir referencias"], answer: 1, hint: "La transparencia sobre el uso de tecnologías es vital." },
+            { id: 9, level: 'facil', q: "¿Qué es ORCID?", options: ["Un código de identificación único e id para investigadores", "Una IA de generación de voz", "Un tipo de licencia de software", "Un estándar de formato de pantalla"], answer: 0, hint: "Identificador único para autores científicos." },
+            { id: 10, level: 'facil', q: "¿Cuál es el propósito de un 'Abstract' o resumen en un artículo académico?", options: ["Decorar la portada", "Sintetizar los objetivos, metodología y resultados principales", "Reemplazar las conclusiones completas", "Listar a los patrocinadores del proyecto"], answer: 1, hint: "Proporciona una vista rápida de todo el trabajo." },
+            { id: 11, level: 'facil', q: "¿Qué herramienta es comúnmente usada para la gestión de referencias bibliográficas?", options: ["Zotero", "Photoshop", "VLC Player", "WinRAR"], answer: 0, hint: "Es gestor bibliográfico junto a Mendeley." },
+            { id: 12, level: 'facil', q: "¿Qué es la curación de contenidos académicos asistida por IA?", options: ["Eliminar todos los textos antiguos", "Filtrar, seleccionar y organizar material relevante mediante algoritmos", "Traducir textos automáticamente sin revisión", "Imprimir libros en 3D"], answer: 1, hint: "Selección y ordenamiento inteligente de información." },
+            { id: 13, level: 'facil', q: "Las licencias Creative Commons (CC) sirven para:", options: ["Prohibir la lectura del material", "Regular los derechos de autor y permisos de reutilización de obras", "Aumentar la velocidad de descarga", "Encriptar archivos PDF"], answer: 1, hint: "Establecen términos flexibles para compartir obras." },
+            { id: 14, level: 'facil', q: "¿Qué es ChatGPT en el contexto académico?", options: ["Un Modelo de Lenguaje de Gran Escala (LLM)", "Un motor de búsqueda de imágenes vectoriales", "Un compilador de lenguaje C++", "Una base de datos SQL"], answer: 0, hint: "Es un LLM desarrollado por OpenAI." },
+            { id: 15, level: 'facil', q: "¿Qué significa el término 'Peer Review'?", options: ["Revisión por pares de expertos", "Lectura rápida individual", "Evaluación automática por computadoras", "Traducción simultánea"], answer: 0, hint: "Evaluación por expertos en el mismo campo." },
+            { id: 16, level: 'facil', q: "¿Cuál es una buena práctica al solicitar un borrador académico a una IA?", options: ["Aceptar la respuesta sin verificación", "Verificar todas las fuentes, citas y datos afirmados", "Eliminar la lista de referencias", "Publicar inmediatamente"], answer: 1, hint: "Verificación y rigor científico." },
+            { id: 17, level: 'facil', q: "¿Qué es Canva o Gamma App en la producción de materiales?", options: ["Plataformas visuales para diseño de presentaciones y documentos interactivos", "Motores de bases de datos de biología", "Servidores de almacenamiento en la nube", "Programas de edición de audio profesional"], answer: 0, hint: "Herramientas de diseño gráfico y maquetación asistida." },
+            { id: 18, level: 'facil', q: "La taxonomía de Bloom es útil para:", options: ["Clasificar niveles de objetivos de aprendizaje", "Calcular el impacto bibliométrico", "Diseñar logotipos de universidades", "Medir la velocidad de navegación"], answer: 0, hint: "Definición de objetivos pedagógicos." },
+            { id: 19, level: 'facil', q: "¿Qué es un PDF/A?", options: ["Un formato estandarizado para la preservación digital a largo plazo", "Un archivo comprimido en ZIP", "Un formato de audio para conferencias", "Un código QR interactivo"], answer: 0, hint: "Versión de PDF diseñada para archivo a largo plazo." },
+            { id: 20, level: 'facil', q: "¿Qué es la paráfrasis académica asistida por IA?", options: ["Reescribir un texto manteniendo la noción original con mejor fluidez", "Copiar texto sin alterar ninguna palabra", "Eliminar todas las citas bibliográficas", "Traducir texto a código binario"], answer: 0, hint: "Reexpresión conceptual de ideas." },
+            { id: 21, level: 'facil', q: "¿Qué es Turnitin o Ithenticate?", options: ["Herramientas de detección de similitud textual y plagio", "Generadores de imágenes con IA", "Sistemas operativos para servidores", "Plataformas de videoconferencia"], answer: 0, hint: "Software de verificación de originalidad académica." },
+            { id: 22, level: 'facil', q: "En normalización de materiales, ¿qué representa la accesibilidad Web (WCAG)?", options: ["Pautas para que el contenido sea accesible a personas con discapacidad", "Aumentar la velocidad de internet", "Un protocolo de seguridad contra cibertrazadores", "Formato de compresión de video"], answer: 0, hint: "Inclusión de usuarios con limitaciones visuales/auditivas." },
+            { id: 23, level: 'facil', q: "¿Qué es un Markdown (.md)?", options: ["Un lenguaje de marcado ligero para formato de texto plano", "Un tipo de tarjeta madre de computadora", "Una extensión de hoja de cálculo de Excel", "Un sistema de archivo de audio"], answer: 0, hint: "Formato estructurado y simple de texto." },
+            { id: 24, level: 'facil', q: "¿Cuál es la función del texto alternativo (Alt Text) en imágenes académicas?", options: ["Describir visualmente la imagen para lectores de pantalla e inclusión", "Cambiar el color de la imagen", "Ocultar la imagen de internet", "Aumentar la resolución de la foto"], answer: 0, hint: "Permite la lectura de imágenes por software asistivo." },
+            { id: 25, level: 'facil', q: "¿Qué es la revisión estilística asistida por IA?", options: ["Ajuste automático de gramática, tono y coherencia sintáctica", "Eliminación de la bibliografía", "Adición de efectos de sonido al texto", "Conversión de texto en fórmulas químicas"], answer: 0, hint: "Corrección gramatical y de estilo." },
+            { id: 26, level: 'facil', q: "¿Qué es Google Scholar?", options: ["Un buscador especializado en literatura y publicaciones académicas", "Un chat de mensajería instantánea", "Un entorno de programación en Python", "Una red social de videojuegos"], answer: 0, hint: "Buscador de artículos, tesis y libros académicos." },
+            { id: 27, level: 'facil', q: "¿Cuál es una ventaja de los Objetos Reutilizables de Aprendizaje (OA)?", options: ["Poder adaptarse y modularse en distintas unidades didácticas", "Tener fecha de expiración obligatoria", "Ser compatibles solo con una marca de computadora", "Estar protegidos contra lectura"], answer: 0, hint: "Modulardad y flexibilidad educativa." },
+            { id: 28, level: 'facil', q: "El término 'Open Access' promueve:", options: ["Acceso libre, gratuito y sin barreras a la literatura científica", "Cobro obligatorio de licencias", "Restricción de contenido solo a profesores", "Venta exclusiva de libros físicos"], answer: 0, hint: "Apertura del conocimiento sin costo." },
+            { id: 29, level: 'facil', q: "¿Qué es un mapa conceptual interactivo?", options: ["Una representación gráfica de relaciones entre conceptos navegable", "Un mapa geográfico en papel", "Un listado de compras de laboratorio", "Una tabla periódica impresa sin texto"], answer: 0, hint: "Diagrama dinámico de conceptos." },
+            { id: 30, level: 'facil', q: "La 'curaduría' de recursos educativos implica:", options: ["Evaluar la pertinencia y calidad del material antes de ofrecerlo a los alumnos", "Guardar archivos en un pendrive", "Imprimir copias físicas masivas", "Diseñar logotipos escolares"], answer: 0, hint: "Filtro cualitativo de recursos." },
+            { id: 31, level: 'facil', q: "¿Qué función realiza la herramienta ResearchRabbit o Elicit?", options: ["Mapeo y descubrimiento de literatura científica asistida por IA", "Edición de audio MP3", "Creación de hojas de cálculo", "Control de asistencia de alumnos"], answer: 0, hint: "Búsqueda y visualización de artículos correlacionados." },
+            { id: 32, level: 'facil', q: "¿Qué es la metacognición en el diseño de materiales académicos?", options: ["Promover la reflexión del estudiante sobre su propio aprendizaje", "Memorizar datos mecánicamente", "Aumentar la dificultad matemática de los exámenes", "Ver videos sin tomar notas"], answer: 0, hint: "Aprender a aprender y autorreflexionar." },
+            { id: 33, level: 'facil', q: "¿Qué es un microaprendizaje (Microlearning)?", options: ["Módulos formativos breves centrados en un objetivo concreto", "Cursos universitarios de 5 años de duración", "Clases magisteriales de 4 horas continuas", "Un examen final de 500 preguntas"], answer: 0, hint: "Contenido fraccionado en cápsulas cortas." },
+            { id: 34, level: 'facil', q: "¿Qué elemento garantiza la trazabilidad de las citas generadas por IA?", options: ["Verificar el DOI y fuente original en las bases de datos primarias", "Confiar en la primera respuesta del bot", "Capturar pantalla del chat", "Cambiar las fechas de publicación"], answer: 0, hint: "Validación en fuentes primarias fidedignas." },
+            { id: 35, level: 'facil', q: "¿Qué significa el acrónimo RED en el ámbito educativo?", options: ["Recursos Educativos Digitales", "Red de Educación Distribuida", "Registro Electrónico Docente", "Revisión Editorial Digital"], answer: 0, hint: "Materiales digitales diseñados para el aprendizaje." },
+
+            // MEDIO (36-70)
+            { id: 36, level: 'medio', q: "¿En qué consiste el principio de 'Human-in-the-loop' (HITL) en la normalización con IA?", options: ["Dejar que la IA publique de forma totalmente autónoma", "Supervisión, validación y juicio crítico humano en cada fase del flujo de la IA", "Reemplazar a los docentes por robots", "Desconectar los servidores durante la noche"], answer: 1, hint: "Intervención humana constante en la toma de decisiones." },
+            { id: 37, level: 'medio', q: "¿Qué es el RAG (Retrieval-Augmented Generation) en la producción de documentos con IA?", options: ["Un método para alimentar la IA con documentos académicos específicos verificados", "Un formato de compresión de imágenes", "Un lenguaje de diseño gráfico", "Un protocolo de transferencia de correo"], answer: 0, hint: "Combina búsqueda en documentos propios con generación de IA." },
+            { id: 38, level: 'medio', q: "¿Cuál es la principal diferencia entre cita textual y paráfrasis según las normas de edición?", options: ["La cita textual reproduce exactamente las palabras; la paráfrasis las explica con palabras propias", "La cita textual no lleva autor", "La paráfrasis se coloca únicamente en notas al pie", "No existe diferencia práctica"], answer: 0, hint: "Cita = reproducción literal; Paráfrasis = reescritura propia." },
+            { id: 39, level: 'medio', q: "¿Qué es la taxonomía de Bloom digital adaptada a la IA?", options: ["Una categorización que integra habilidades como evaluar prompts y validar salidas de la IA", "Un antivirus informático", "Un sistema de graduación de notas automáticas", "Un software de simulación química"], answer: 0, hint: "Incluye la capacidad crítica frente a las herramientas generativas." },
+            { id: 40, level: 'medio', q: "¿Qué es la interoperabilidad SCORM / LTI en materiales educativos digitales?", options: ["Estándares para que los contenidos funcionen en múltiples plataformas LMS (Moodle, Canvas)", "Un tipo de cable de conexión de red", "Una marca de proyectores escolares", "Un tipo de licencia comercial"], answer: 0, hint: "Estándares de integración entre contenidos y plataformas." },
+            { id: 41, level: 'medio', q: "¿Qué rol cumple un 'System Prompt' o Instrucción de Sistema en un LLM?", options: ["Definir el rol, contexto, tono y restricciones generales antes de la interacción", "Formatear el disco duro del usuario", "Instalar el software en el servidor", "Apagar la IA si comete errores"], answer: 0, hint: "Establece el marco de comportamiento base del modelo." },
+            { id: 42, level: 'medio', q: "¿Qué es la 'sesgo algorítmico' en la producción académica generativa?", options: ["Prejuicios o inclinaciones sistemáticas presentes en los datos de entrenamiento de la IA", "Errores ortográficos de la computadora", "Lentitud en la conexión a internet", "Falta de espacio en memoria RAM"], answer: 0, hint: "Tendencias discriminatorias o parciales replicadas por la IA." },
+            { id: 43, level: 'medio', q: "¿En qué consiste la técnica de Prompting 'Chain of Thought' (Cadena de Pensamiento)?", options: ["Pedir a la IA que desglose su razonamiento paso a paso antes de dar la respuesta final", "Enviar 100 preguntas al mismo tiempo", "Repetir la misma palabra muchas veces", "Traducir el prompt a varios idiomas"], answer: 0, hint: "Solicitar la explicación del proceso de razonamiento." },
+            { id: 44, level: 'medio', q: "¿Qué es el derecho de cita en la legislación de propiedad intelectual?", options: ["Permiso legal para incluir fragmentos ajenos indicando fuente y autor con fines docentes/investigación", "Copiar libros enteros libremente", "Pagar regalías por cada palabra leída", "Prohibir la lectura pública de un artículo"], answer: 0, hint: "Excepción legal para el uso académico justificado." },
+            { id: 45, level: 'medio', q: "¿Qué caracteriza a un Objeto Virtual de Aprendizaje (OVA) bien normalizado?", options: ["Poseer estructura pedagógica, metadatos claros, accesibilidad y reutilización", "Estar guardado como imagen sin texto", "Tener más de 500 páginas en un solo PDF", "Carecer de evaluaciones"], answer: 0, hint: "Estructura didáctica integral y estructurada." },
+            { id: 46, level: 'medio', q: "¿Qué es el estándar LOM (Learning Object Metadata)?", options: ["Esquema de metadatos para etiquetar y catalogar recursos educativos digitales", "Un lenguaje de programación para IA", "Un modelo de diseño de aulas físicas", "Un protocolo de redes wifi"], answer: 0, hint: "Etiquetado estándar para búsqueda de materiales." },
+            { id: 47, level: 'medio', q: "¿Qué beneficio aporta el análisis de legibilidad (como el índice Flesch-Szigriszt) en materiales académicos?", options: ["Medir la complejidad del texto y adecuarlo al nivel formativo de los estudiantes", "Medir la resolución de impresión de las hojas", "Contar la cantidad de imágenes del libro", "Evaluar el costo de publicación"], answer: 0, hint: "Ajuste de la complejidad gramatical al público objetivo." },
+            { id: 48, level: 'medio', q: "La 'Fine-tuning' o ajuste fino de un modelo de IA académica consiste en:", options: ["Reentrenar un modelo base con un conjunto de datos especializado en una materia", "Cambiar el color de la pantalla del software", "Comprar una computadora más rápida", "Reescribir el código fuente desde cero"], answer: 0, hint: "Especialización de la IA en un dominio específico de conocimiento." },
+            { id: 49, level: 'medio', q: "¿Qué es un Prompt Few-Shot?", options: ["Proporcionar al modelo algunos ejemplos concretos de entrada/salida en la instrucción", "Dar un comando sin ningún contexto", "Presionar la tecla enter tres veces", "Usar palabras clave únicamente en inglés"], answer: 0, hint: "Incluir ejemplos ilustrativos dentro del prompt." },
+            { id: 50, level: 'medio', q: "¿Por qué es crucial el formateo accesible de tablas en documentos académicos?", options: ["Para que los lectores de pantalla puedan interpretar correctamente las filas y columnas", "Para que ocupen menos espacio de hoja", "Para aplicar colores chillones", "Para evitar que sean copiadas"], answer: 0, hint: "Facilita la navegación accesible a usuarios con visión reducida." },
+            { id: 51, level: 'medio', q: "En la evaluación de materiales generados por IA, la 'fidelidad conceptual' evalúa:", options: ["El grado de precisión y apego del contenido a los hechos científicos comprobados", "La rapidez con la que se generó el texto", "El tamaño de la fuente tipográfica", "El número de palabras por párrafo"], answer: 0, hint: "Rigor y corrección del contenido teórico." },
+            { id: 52, level: 'medio', q: "¿Qué es el Marcado LaTeX en la producción de materiales académicos?", options: ["Un sistema de preparación de documentos especializado en fórmulas matemáticas y científicas", "Un programa de retoque fotográfico", "Un formato de base de datos relacional", "Un estándar de video digital"], answer: 0, hint: "Amplia tradición en edición de ciencias exactas y fórmulas." },
+            { id: 53, level: 'medio', q: "¿Qué es la 'Curaduría Crítica' de prompts?", options: ["Revisar, optimizar y auditar éticamente las instrucciones enviadas a los modelos de IA", "Guardar prompts en una libreta de papel", "Usar prompts automáticos sin modificarlos", "Vender prompts en redes sociales"], answer: 0, hint: "Evaluación refinada y consciente del prompt." },
+            { id: 54, level: 'medio', q: "¿Qué rol juega la Taxonomía SOLO (Structure of Observed Learning Outcome) en el diseño de guías académicas?", options: ["Clasificar la complejidad de la comprensión del estudiante desde preestructural a extendido", "Medir la velocidad de lectura en voz alta", "Determinar la cantidad de horas de clase", "Diseñar exámenes tipo test únicamente"], answer: 0, hint: "Evaluación del nivel cualitativo del aprendizaje." },
+            { id: 55, level: 'medio', q: "¿Qué es la minería de textos (Text Mining) aplicada a la literatura académica?", options: ["Extracción automática de patrones, relaciones y conocimiento de grandes volúmenes de texto", "Escribir artículos muy rápidamente", "Eliminar archivos duplicados del disco", "Buscar errores tipográficos manualmente"], answer: 0, hint: "Análisis algorítmico de grandes corpus documentales." },
+            { id: 56, level: 'medio', q: "¿Cuál es el propósito del control de versiones (Git/GitHub) en la redacción académica colaborativa?", options: ["Rastrear cambios, mantener historial de revisiones y gestionar aportes de múltiples autores", "Aumentar el tamaño de fuente del documento", "Imprimir directamente en papel", "Convertir textos en archivos MP3"], answer: 0, hint: "Historial de modificaciones y trabajo en equipo ordenado." },
+            { id: 57, level: 'medio', q: "¿Qué es el análisis de sentimiento en comentarios de retroalimentación académica?", options: ["Identificar con IA la polaridad (positiva, negativa, neutral) y tono del feedback de estudiantes", "Medir el nivel de estrés físico del profesor", "Contar la cantidad de signos de interrogación", "Evaluar la ortografía únicamente"], answer: 0, hint: "Procesamiento de lenguaje natural sobre el tono evaluativo." },
+            { id: 58, level: 'medio', q: "¿Qué implica la 'normalización léxica' en un material de estudio?", options: ["Unificar el uso de términos técnicos evitando ambigüedades y sinonimias erróneas", "Usar palabras informales para mayor cercanía", "Traducir todo el texto al latín", "Eliminar todos los adjetivos del texto"], answer: 0, hint: "Uso consistente del glosario técnico especializado." },
+            { id: 59, level: 'medio', q: "¿Qué es la técnica de 'Zero-Shot Prompting'?", options: ["Solicitar una tarea a la IA sin proporcionarle ejemplos previos", "Apagar la IA antes de responder", "Escribir un prompt en código de máquina", "Usar solo emojis en la solicitud"], answer: 0, hint: "Solicitud directa sin ejemplos previos." },
+            { id: 60, level: 'medio', q: "¿Qué es un 'Diagrama de Flujo Pedagógico'?", options: ["Representación secuencial de las actividades y decisiones en la ruta de aprendizaje", "La lista de notas de los alumnos", "Un gráfico de barras de presupuesto escolar", "El plano del aula física"], answer: 0, hint: "Mapeo lógico del recorrido formativo." },
+            { id: 61, level: 'medio', q: "¿Qué es la atribución CC-BY en licencias de producción académica?", options: ["Permite compartir y adaptar la obra siempre que se reconozca la autoría original", "Prohíbe cualquier uso derivado o comercial", "Obliga a entregar la obra en formato físico", "Exige mantener el anonimato del autor"], answer: 0, hint: "Requisito básico de dar crédito al autor." },
+            { id: 62, level: 'medio', q: "La verificación cruzada o 'Fact-Checking' mediante IA implica:", options: ["Contrastar automáticamente las afirmaciones de un texto con bases de conocimientos confiables", "Aceptar el primer resultado de un buscador general", "Preguntarle a la misma IA si está segura", "Eliminar todas las citas del documento"], answer: 0, hint: "Validación externa de datos expresados." },
+            { id: 63, level: 'medio', q: "¿Qué es un modelo de IA Multimodal?", options: ["Un modelo capaz de procesar y relacionar información de múltiples tipos (texto, imagen, audio)", "Una computadora con varios monitores", "Un software que solo funciona en teléfonos", "Un sistema de traducción de un solo idioma"], answer: 0, hint: "Procesa simultáneamente texto, voz, imagen, etc." },
+            { id: 64, level: 'medio', q: "¿Qué es la 'retroalimentación formativa asistida por IA'?", options: ["Comentarios específicos e inmediatos generados para orientar la mejora del estudiante", "Una nota numérica final sin explicaciones", "Un correo masivo de felicitaciones", "La lectura automática del examen en voz alta"], answer: 0, hint: "Orientación cualitativa para guiar el aprendizaje procesal." },
+            { id: 65, level: 'medio', q: "¿Qué significa que un recurso educativo digital sea 'Modular'?", options: ["Que sus componentes se pueden reorganizar o ensamblar de distintas formas según la necesidad", "Que está empaquetado en una caja física", "Que solo dura 10 minutos de lectura", "Que no se puede modificar bajo ninguna circunstancia"], answer: 0, hint: "Estructura flexible por bloques o módulos independiente." },
+            { id: 66, level: 'medio', q: "¿Qué es el 'Diseño Universal para el Aprendizaje' (DUA)?", options: ["Marco pedagógico para crear entornos flexibles que minimicen barreras de aprendizaje", "Un plano arquitectónico para escuelas de un solo piso", "Un plan de estudios único aplicado a todos los países", "Un software de evaluación automática sin docentes"], answer: 0, hint: "Inclusión y múltiples formas de representación y compromiso." },
+            { id: 67, level: 'medio', q: "¿Qué función cumple un mapa de empatía pedagógico en el desarrollo de materiales?", options: ["Comprender las necesidades, dudas y contexto emocional del estudiante destinatario", "Calcular el promedio de notas del curso", "Evaluar la infraestructura del colegio", "Elegir la tipografía de los libros"], answer: 0, hint: "Centrar el diseño didáctico en la vivencia del estudiante." },
+            { id: 68, level: 'medio', q: "¿Qué es la ingeniería de contexto (Context Window) en LLMs?", options: ["El límite máximo de tokens o texto que la IA puede considerar simultáneamente al responder", "La ventana de cristal donde se ubica el servidor", "El tiempo de garantía del software", "La resolución de pantalla mínima requerida"], answer: 0, hint: "Capacidad límite de memoria activa del modelo en una sesión." },
+            { id: 69, level: 'medio', q: "¿Qué es un 'Prompt Inverso' (Reverse Prompting)?", options: ["Proporcionar a la IA un texto terminado para que deduzca qué prompt se utilizó para crearlo", "Escribir las palabras al revés de derecha a izquierda", "Eliminar las preguntas del examen", "Pedir a la IA que responda con insultos"], answer: 0, hint: "Reconstrucción del prompt original desde el resultado." },
+            { id: 70, level: 'medio', q: "¿Qué es la densidad informacional en materiales de estudio?", options: ["La concentración de conceptos clave e ideas sustantivas por extensión de texto", "El peso en megabytes del archivo PDF", "La cantidad de colores usados en el diseño", "La velocidad de carga en la plataforma LMS"], answer: 0, hint: "Relación entre extensión del texto y contenido sustancial." },
+
+            // AVANZADO (71-100)
+            { id: 71, level: 'avanzado', q: "¿Qué es la técnica 'Self-Consistency' en el razonamiento de modelos generativos?", options: ["Generar múltiples rutas de razonamiento y seleccionar la respuesta más consistente por consenso", "Hacer que la IA repita exactamente la misma frase 10 veces", "Desconectar los filtros éticos del modelo", "Usar siempre el mismo prompt en todas las asignaturas"], answer: 0, hint: "Muestra de múltiples respuestas y elección de la dominante por coherencia." },
+            { id: 72, level: 'avanzado', q: "¿Qué implica la arquitectura Transformer en los modelos de lenguaje modernos?", options: ["Mecanismos de atención para procesar relaciones de dependencia de palabras a larga distancia", "Un robot que ensambla circuitos impresos", "Un convertidor de voltaje para servidores informáticos", "Un software de animación 3D para cine"], answer: 0, hint: "Mecanismo de atención autónoma (Self-Attention)." },
+            { id: 73, level: 'avanzado', q: "¿En qué consiste el principio FAIR para la gestión de datos académicos y de materiales de IA?", options: ["Findable, Accessible, Interoperable y Reusable (Encontrable, Accesible, Interoperable, Reutilizable)", "Fast, Accurate, Intelligent y Reliable", "Free, Automated, Integrated y Restrictive", "Formal, Academic, International y Registered"], answer: 0, hint: "Estándar internacional de gobernanza de datos científicos." },
+            { id: 74, level: 'avanzado', q: "¿Qué es el marcado semántico mediante Schema.org en páginas y recursos educativos?", options: ["Inclusión de etiquetas de metadatos estructurados para que buscadores entiendan el contenido", "Pintar los títulos de color rosa", "Usar marcas de agua en los archivos", "Encriptar las respuestas de los exámenes"], answer: 0, hint: "Estructura semántica entendible por agentes y motores de búsqueda." },
+            { id: 75, level: 'avanzado', q: "¿Qué es la alucinación inductiva por sesgo de confirmación en una IA científica?", options: ["Cuando el modelo invalida hipótesis correctas para adaptarse al sesgo implícito del prompt", "Cuando la computadora se sobrecalienta", "Cuando el usuario no entiende la respuesta", "Un fallo de pantalla azul de Windows"], answer: 0, hint: "La IA valida afirmaciones falsas porque el prompt las da por hechas." },
+            { id: 76, level: 'avanzado', q: "¿Qué es la evaluación Heurística de Usabilidad Pedagógica (Nielsen adaptado)?", options: ["Revisión experta de la interfaz del material mediante principios de claridad, control e inclusión", "Medir la velocidad de tecleo del estudiante", "Contar la cantidad de páginas impresas", "Un examen de matemática pura"], answer: 0, hint: "Auditoría de experiencia de usuario orientada al aprendizaje." },
+            { id: 77, level: 'avanzado', q: "¿Qué representa la métrica BLEU / ROUGE en el análisis de generación de texto académico?", options: ["Métricas estadísticas para evaluar la calidad del texto generado comparándolo con referencias humanas", "Fórmulas para medir la resistencia física de los libros", "Velocidad de descarga de internet en Mbps", "El número de descargas de un PDF"], answer: 0, hint: "Evaluación cuantitativa de solapamiento n-grama frente a textos de referencia." },
+            { id: 78, level: 'avanzado', q: "¿Qué es el 'Prompt Injection' y qué riesgo representa en entornos educativos con IA?", options: ["Inserción de instrucciones maliciosas en los insumos para manipular o eludir reglas del sistema", "Inyectar código CSS para cambiar colores", "Cargar la batería de la laptop rápidamente", "Agregar enlaces patrocinados en los textos"], answer: 0, hint: "Ataque de seguridad que altera las restricciones éticas del bot." },
+            { id: 79, level: 'avanzado', q: "La técnica de alineamiento RLHF (Reinforcement Learning from Human Feedback) busca:", options: ["Alinear las respuestas de la IA con los valores, preferencias y criterios de calidad humanos", "Aumentar el precio de venta de los modelos", "Hacer que la IA aprenda sin intervención de datos", "Reducir el tamaño de la memoria de la tarjeta gráfica"], answer: 0, hint: "Aprendizaje por refuerzo guiado por evaluadores humanos." },
+            { id: 80, level: 'avanzado', q: "¿Qué es un 'Embeddings Vectorial' en el contexto del procesamiento de textos académicos?", options: ["Representación numérica en un espacio multidimensional del significado semántico del texto", "Una imagen vectorial creada en Illustrator", "Un virus encubierto en una fuente tipográfica", "Un tipo de conector de cable de red"], answer: 0, hint: "Vectores matemáticos que capturan el significado de las palabras." },
+            { id: 81, level: 'avanzado', q: "¿Qué es la 'sobreajuste' (Overfitting) al entrenar un modelo para normalización de guías didácticas?", options: ["Cuando el modelo memoriza excesivamente los datos de entrenamiento y no generaliza bien ante casos nuevos", "Cuando la computadora tiene demasiados programas abiertos", "Cuando el texto generado es demasiado largo", "Cuando el archivo supera 1GB de tamaño"], answer: 0, hint: "Perdida de capacidad de generalización en datos nuevos." },
+            { id: 82, level: 'avanzado', q: "¿Qué es el marco epistemológico Technocognitive en la educación con IA?", options: ["El estudio de cómo las herramientas tecnológicas reconfiguran los procesos de pensamiento y construcción del conocimiento", "Un programa para enseñar informática a niños", "La venta de computadoras universitarias", "Un lenguaje de marcado para sitios web"], answer: 0, hint: "Análisis de la co-construcción cognitiva entre humano y tecnología." },
+            { id: 83, level: 'avanzado', q: "¿Qué es la gobernanza de datos en plataformas educativas con IA?", options: ["Políticas y controles sobre la privacidad, soberanía, propiedad e integridad de los datos de los usuarios", "Elegir al rector de una universidad", "Comprar servidores de almacenamiento", "Instalar cortafuegos en la sala de computo"], answer: 0, hint: "Políticas sobre ética, seguridad y propiedad de la información." },
+            { id: 84, level: 'avanzado', q: "¿En qué consiste la técnica de compilación de prompts 'Tree of Thoughts' (ToT)?", options: ["Explorar múltiples ramas de solución simultáneamente permitiendo el retroceso (backtracking) sintáctico", "Diseñar un árbol genealógico en PowerPoint", "Escribir un texto con estructura de poema", "Generar mapas de bits de alta resolución"], answer: 0, hint: "Evaluación en estructura de árbol navegable de opciones." },
+            { id: 85, level: 'avanzado', q: "¿Qué es la 'Comprensión de Lectura Máquina' (Machine Reading Comprehension)?", options: ["Capacidad de un sistema algorítmico para extraer respuestas a preguntas complejas basadas en un texto dado", "Un escáner óptico de papel", "Un software que lee textos en voz alta", "Un examen de tipografía profesional"], answer: 0, hint: "Procesamiento profundo para responder preguntas situadas." },
+            { id: 86, level: 'avanzado', q: "¿Qué implica la licitación de datos 'Synthetic Data' para entrenamiento académico?", options: ["Generar datos artificiales controlados mediante algoritmos para entrenar modelos sin comprometer la privacidad", "Copiar datos reales de alumnos de forma secreta", "Usar estadísticas inventadas en artículos científicos", "Comprar discos duros usados"], answer: 0, hint: "Generación de datos artificiales seguros para preservar privacidad." },
+            { id: 87, level: 'avanzado', q: "¿Qué es el 'Knowledge Graph' (Grafo de Conocimiento) en una ontología académica?", options: ["Estructura de red que representa entidades del conocimiento científico y sus relaciones semánticas", "Un gráfico de pastel en Excel", "Una foto satelital de un campus", "Un mapa de carreteras regional"], answer: 0, hint: "Red de nodos e interconexiones semánticas de conceptos." },
+            { id: 88, level: 'avanzado', q: "¿Qué es la 'Taxonomía de Errores de IA' en revisión de contenidos?", options: ["Una clasificación sistemática de los fallos (alucinación, sesgo, inconsistencia, anacronismo) de los LLM", "La lista de virus detectados en un sistema", "La tabla de multas por entregas tardías", "Un filtro de spam de correo"], answer: 0, hint: "Catalogación metódica de los tipos de desviación de la IA." },
+            { id: 89, level: 'avanzado', q: "¿Qué es la tasa de Perplejidad (Perplexity) en la evaluación de un modelo de lenguaje?", options: ["Métrica que mide la incertidumbre del modelo al predecir la siguiente palabra de un texto", "El nivel de sorpresa del estudiante al leer la nota", "La cantidad de errores ortográficos por página", "El tiempo que tarda el bot en responder"], answer: 0, hint: "Medida de incertidumbre estadística en predicción lingüística." },
+            { id: 90, level: 'avanzado', q: "La norma ISO/IEC 24751 se refiere a:", options: ["Adaptabilidad y accesibilidad individualizada en e-learning y recursos educativos", "Seguridad en laboratorios de química", "Especificación de cables de fibra óptica", "Formato estándar de tarjetas de crédito"], answer: 0, hint: "Estándar de personalización y accesibilidad en aprendizaje digital." },
+            { id: 91, level: 'avanzado', q: "¿Qué es un 'Agentic Workflow' (Flujo de Agentes de IA) en producción de contenidos?", options: ["Una cadena iterativa donde múltiples agentes especializados (redactor, editor, verificador) colaboran en secuencia", "Un equipo humano de secretarias", "Un programa para enviar correos masivos", "Un diagrama de circuito eléctrico"], answer: 0, hint: "Orquestación cooperativa de múltiples roles de agentes IA." },
+            { id: 92, level: 'avanzado', q: "¿Qué es la atribución de proveniencia de datos (Data Provenance)?", options: ["Rastrear el origen exacto, transformaciones e historial de un conjunto de datos educativo", "Saber en qué tienda se compró la PC", "Saber la nacionalidad del autor", "Imprimir el código de barras en el libro"], answer: 0, hint: "Trazabilidad del origen y mutación histórica de los datos." },
+            { id: 93, level: 'avanzado', q: "¿En qué consiste el principio de 'Explainable AI' (XAI) en la evaluación académica?", options: ["Lograr que las decisiones y calificaciones automáticas de la IA sean transparentes y explicables para el alumno", "Explicar cómo funciona el hardware de la computadora", "Traducción de textos a varios idiomas", "Usar gráficos de colores en los reportes"], answer: 0, hint: "Transparencia explicativa de los algoritmos de decisión." },
+            { id: 94, level: 'avanzado', q: "¿Qué es el 'Token Limit' y la fragmentación de documentos (Chunking)?", options: ["Dividir textos extensos en bloques procesables para no superar el límite de contexto del modelo", "Cortar las hojas de un libro impreso", "Separar a los alumnos en grupos de trabajo", "Limitar el número de horas de estudio"], answer: 0, hint: "División del texto en trozos (chunks) optimizados." },
+            { id: 95, level: 'avanzado', q: "¿Qué es el protocolo OAI-PMH en repositorios institucionales?", options: ["Open Archives Initiative Protocol for Metadata Harvesting para recopilación de metadatos académicos", "Un protocolo de seguridad contra ataques cibernéticos", "Un tipo de conexión de impresora en red", "Un formato de archivo de presentación"], answer: 0, hint: "Estándar de intercambio de metadatos entre repositorios digitalizados." },
+            { id: 96, level: 'avanzado', q: "¿Qué es el 'Catastrophic Forgetting' en el entrenamiento continuo de modelos académicos?", options: ["Cuando un modelo pierde su conocimiento previo al ser reentrenado con nueva información", "Cuando se borra el disco duro por accidente", "Cuando el alumno olvida las respuestas del examen", "Cuando se interrumpe el suministro eléctrico"], answer: 0, hint: "Pérdida drástica de conocimiento previamente adquirido." },
+            { id: 97, level: 'avanzado', q: "¿Qué representa el estándar Dublin Core en metadatos bibliográficos?", options: ["Un conjunto básico de 15 elementos de metadatos para describir recursos digitales", "Un tipo de procesador Intel", "Un manual de redacción periodística", "Una universidad de Irlanda"], answer: 0, hint: "Estándar flexible de 15 campos descriptivos principales." },
+            { id: 98, level: 'avanzado', q: "¿Qué es el marcado TEI (Text Encoding Initiative) en la edición académica de textos?", options: ["Un estándar XML para la codificación digital de textos de humanidades y documentos históricos", "Un tipo de examen tipo test", "Un procesador de texto comercial", "Un estándar de video HD"], answer: 0, hint: "Codificación semántica estructural basada en XML." },
+            { id: 99, level: 'avanzado', q: "La diferencia entre un LLM propietario (ej. GPT-4) y uno Open Source (ej. Llama 3) radica principalmente en:", options: ["El acceso transparente a los pesos del modelo, código y posibilidad de hospedaje propio libre", "El color de la interfaz de usuario", "Que el Open Source no requiere electricidad", "Que los modelos propietarios no pueden cometer errores"], answer: 0, hint: "Apertura del código, arquitectura y pesos del modelo." },
+            { id: 100, level: 'avanzado', q: "¿Qué es la Validación Cruzada (Cross-Validation) en el diseño de evaluadores automatizados?", options: ["Técnica estadística para evaluar cómo los resultados de un modelo de evaluación generalizan a datos independientes", "Revisar un examen entre dos profesores simultáneamente", "Cambiar el orden de las preguntas en el papel", "Imprimir el certificado en dos hojas"], answer: 0, hint: "Evaluación de robustez del modelo mediante particiones de prueba." }
+        ];
+
+        let state = {
+            teamName: "",
+            teamMembers: "",
+            selectedQuestions: [],
+            currentQuestionIndex: 0,
+            score: 0,
+            timer: 120,
+            timerInterval: null,
+            startTime: null,
+            endTime: null,
+            audioEnabled: false,
+            audioCtx: null,
+            lifelines: { fiftyFifty: true, extraTime: true, hint: true },
+            isQuizActive: false
+        };
+
+        window.currentCloudScores = [];
+
+        window.onload = function() {
+            const currentUrl = window.location.href;
+            document.getElementById('share-link-input').value = currentUrl;
+
+            new QRCode(document.getElementById("qrcode"), {
+                text: currentUrl,
+                width: 140,
+                height: 140,
+                colorDark : "#FF1493",
+                colorLight : "#FFFFFF",
+                correctLevel : QRCode.CorrectLevel.H
+            });
+
+            renderQuestionBank('all');
+
+            window.addEventListener('beforeunload', function (e) {
+                if (state.isQuizActive) {
+                    e.preventDefault();
+                    e.returnValue = 'Tienes un examen en curso. Si abandonas la página perderás tu intento.';
+                }
+            });
+        };
+
+        window.renderLeaderboardUI = function(list) {
+            const tbody = document.getElementById('leaderboard-body');
+            if (!list || list.length === 0) {
+                tbody.innerHTML = `<tr><td colspan="6" class="text-center py-6 text-slate-400">No hay registros aún. ¡Esperando a los estudiantes!</td></tr>`;
+                return;
+            }
+
+            tbody.innerHTML = "";
+            list.forEach((item, index) => {
+                const tr = document.createElement('tr');
+                tr.className = index % 2 === 0 ? "bg-white hover:bg-pink-50" : "bg-pink-50/50 hover:bg-pink-50";
+                tr.innerHTML = `
+                    <td class="px-4 py-3 font-extrabold text-brandHotPink">${index + 1}</td>
+                    <td class="px-4 py-3 font-bold text-slate-800">${escapeHtml(item.teamName)}</td>
+                    <td class="px-4 py-3 text-xs text-slate-600 max-w-xs truncate">${escapeHtml(item.members)}</td>
+                    <td class="px-4 py-3 text-center font-black text-slate-900">${item.score}/20</td>
+                    <td class="px-4 py-3 text-center text-xs font-semibold text-slate-500">${item.timeSpent}</td>
+                    <td class="px-4 py-3 text-center text-[10px] text-slate-400">${item.date}</td>
+                `;
+                tbody.appendChild(tr);
+            });
+        };
+
+        function switchTab(tabId) {
+            if (state.isQuizActive && tabId !== 'nav-quiz') {
+                if (!confirm("⚠️ Tienes una evaluación en progreso. Si sales, seguirás corriendo el tiempo. ¿Deseas cambiar?")) {
+                    return;
+                }
+            }
+
+            document.querySelectorAll('.tab-content').forEach(el => el.classList.add('hidden'));
+            document.getElementById(tabId).classList.remove('hidden');
+
+            const tabs = ['home', 'quiz', 'leaderboard', 'bank'];
+            tabs.forEach(t => {
+                const btn = document.getElementById(`tab-${t}`);
+                if (`nav-${t}` === tabId) {
+                    btn.className = "px-4 py-2 rounded-xl transition bg-brandHotPink text-white shadow";
+                } else {
+                    btn.className = "px-4 py-2 rounded-xl transition text-slate-700 hover:bg-pink-200";
+                }
+            });
+        }
+
+        function initAudio() {
+            if (!state.audioCtx) {
+                const AudioContext = window.AudioContext || window.webkitAudioContext;
+                state.audioCtx = new AudioContext();
+            }
+            if (state.audioCtx.state === 'suspended') {
+                state.audioCtx.resume();
+            }
+        }
+
+        function toggleAudio() {
+            initAudio();
+            state.audioEnabled = !state.audioEnabled;
+            const icon = document.getElementById('audio-icon');
+            if (state.audioEnabled) {
+                icon.className = "fa-solid fa-volume-high";
+                playBeep(523.25, 0.15);
+            } else {
+                icon.className = "fa-solid fa-volume-xmark";
+            }
+        }
+
+        function updateVolume(val) {}
+
+        function playBeep(freq = 440, duration = 0.2, type = 'sine') {
+            if (!state.audioEnabled || !state.audioCtx) return;
+            try {
+                const osc = state.audioCtx.createOscillator();
+                const gain = state.audioCtx.createGain();
+                const vol = parseFloat(document.getElementById('volume-control').value) || 0.9;
+                
+                osc.type = type;
+                osc.frequency.setValueAtTime(freq, state.audioCtx.currentTime);
+                gain.gain.setValueAtTime(vol * 0.4, state.audioCtx.currentTime);
+                gain.gain.exponentialRampToValueAtTime(0.00001, state.audioCtx.currentTime + duration);
+                
+                osc.connect(gain);
+                gain.connect(state.audioCtx.destination);
+                osc.start();
+                osc.stop(state.audioCtx.currentTime + duration);
+            } catch(e) { console.error(e); }
+        }
+
+        function playSuccessSound() {
+            if (!state.audioEnabled) return;
+            playBeep(523.25, 0.12);
+            setTimeout(() => playBeep(659.25, 0.12), 120);
+            setTimeout(() => playBeep(783.99, 0.25), 240);
+        }
+
+        function playErrorSound() {
+            if (!state.audioEnabled) return;
+            playBeep(180, 0.25, 'sawtooth');
+            setTimeout(() => playBeep(130, 0.35, 'sawtooth'), 180);
+        }
+
+        function startQuiz(event) {
+            event.preventDefault();
+            
+            const nameInput = document.getElementById('input-team-name').value.trim();
+            const membersInput = document.getElementById('input-members').value.trim();
+
+            if (!nameInput || !membersInput) {
+                alert("Por favor completa el nombre del equipo y la lista de integrantes.");
+                return;
+            }
+
+            // Check single attempt lock per device
+            const triedKey = `quiz_done_${nameInput.toLowerCase()}`;
+            if (localStorage.getItem(triedKey)) {
+                alert("⚠️ Este equipo ya ha registrado un intento previo en este dispositivo. Las reglas exigen intento único.");
+                return;
+            }
+
+            state.teamName = nameInput;
+            state.teamMembers = membersInput;
+
+            const easyList = QUESTION_BANK.filter(q => q.level === 'facil');
+            const medList = QUESTION_BANK.filter(q => q.level === 'medio');
+            const advList = QUESTION_BANK.filter(q => q.level === 'avanzado');
+
+            const shuffle = (array) => array.sort(() => 0.5 - Math.random());
+
+            const selected = [
+                ...shuffle(easyList).slice(0, 7),
+                ...shuffle(medList).slice(0, 8),
+                ...shuffle(advList).slice(0, 5)
+            ];
+
+            state.selectedQuestions = shuffle(selected);
+            state.currentQuestionIndex = 0;
+            state.score = 0;
+            state.lifelines = { fiftyFifty: true, extraTime: true, hint: true };
+            state.startTime = new Date();
+            state.isQuizActive = true;
+
+            document.getElementById('lifeline-5050').disabled = false;
+            document.getElementById('lifeline-5050').classList.remove('opacity-40', 'cursor-not-allowed');
+            document.getElementById('lifeline-time').disabled = false;
+            document.getElementById('lifeline-time').classList.remove('opacity-40', 'cursor-not-allowed');
+            document.getElementById('lifeline-hint').disabled = false;
+            document.getElementById('lifeline-hint').classList.remove('opacity-40', 'cursor-not-allowed');
+
+            document.getElementById('quiz-not-started').classList.add('hidden');
+            document.getElementById('quiz-results-container').classList.add('hidden');
+            document.getElementById('quiz-active-container').classList.remove('hidden');
+
+            document.getElementById('hud-team-name').innerText = state.teamName;
+
+            switchTab('nav-quiz');
+            loadQuestion();
+        }
+
+        function loadQuestion() {
+            clearInterval(state.timerInterval);
+            state.timer = 120; // 2 minutes strict
+            updateTimerDisplay();
+
+            const currentQ = state.selectedQuestions[state.currentQuestionIndex];
+            
+            document.getElementById('hud-progress').innerText = `${state.currentQuestionIndex + 1} / 20`;
+            
+            const diffBadge = document.getElementById('hud-difficulty');
+            diffBadge.innerText = currentQ.level.toUpperCase();
+            if (currentQ.level === 'facil') diffBadge.className = "text-xs font-extrabold px-3 py-1.5 rounded-full text-white bg-green-500 uppercase";
+            else if (currentQ.level === 'medio') diffBadge.className = "text-xs font-extrabold px-3 py-1.5 rounded-full text-white bg-amber-500 uppercase";
+            else diffBadge.className = "text-xs font-extrabold px-3 py-1.5 rounded-full text-white bg-red-500 uppercase";
+
+            document.getElementById('question-text').innerText = `${state.currentQuestionIndex + 1}. ${currentQ.q}`;
+            document.getElementById('hint-box').classList.add('hidden');
+
+            const container = document.getElementById('options-container');
+            container.innerHTML = "";
+
+            const letters = ["A", "B", "C", "D"];
+            currentQ.options.forEach((opt, idx) => {
+                const btn = document.createElement('button');
+                btn.className = "option-btn w-full p-4 text-left rounded-2xl border-2 border-pink-200 bg-pink-50 hover:bg-yellow-100 hover:border-brandYellow transition flex items-center space-x-3 text-slate-700 font-semibold science-btn";
+                btn.onclick = () => selectOption(idx);
+                btn.innerHTML = `
+                    <span class="w-8 h-8 rounded-xl bg-brandHotPink text-white font-extrabold flex items-center justify-center text-sm">${letters[idx]}</span>
+                    <span class="flex-1">${opt}</span>
+                `;
+                container.appendChild(btn);
+            });
+
+            const nextBtn = document.getElementById('btn-next-question');
+            nextBtn.disabled = true;
+            nextBtn.className = "px-8 py-3 bg-slate-300 text-slate-500 font-extrabold rounded-xl text-base science-btn transition cursor-not-allowed";
+
+            state.timerInterval = setInterval(() => {
+                state.timer--;
+                updateTimerDisplay();
+                if (state.timer <= 15 && state.timer > 0) {
+                    playBeep(850, 0.08);
+                }
+                if (state.timer <= 0) {
+                    clearInterval(state.timerInterval);
+                    playErrorSound();
+                    autoTimeOut();
+                }
+            }, 1000);
+        }
+
+        function updateTimerDisplay() {
+            const mins = Math.floor(state.timer / 60);
+            const secs = state.timer % 60;
+            document.getElementById('hud-timer').innerText = `${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
+        }
+
+        function selectOption(selectedIdx) {
+            playBeep(440, 0.08);
+            const buttons = document.querySelectorAll('.option-btn');
+            buttons.forEach((btn, idx) => {
+                if (idx === selectedIdx) {
+                    btn.className = "option-btn w-full p-4 text-left rounded-2xl border-4 border-brandHotPink bg-pink-200 text-slate-900 font-bold flex items-center space-x-3 science-btn";
+                } else {
+                    btn.className = "option-btn w-full p-4 text-left rounded-2xl border-2 border-slate-200 bg-white text-slate-400 flex items-center space-x-3 opacity-60";
+                }
+            });
+
+            state.currentSelectedOption = selectedIdx;
+
+            const nextBtn = document.getElementById('btn-next-question');
+            nextBtn.disabled = false;
+            nextBtn.className = "px-8 py-3 bg-brandHotPink hover:bg-pink-600 text-white font-extrabold rounded-xl text-base science-btn transition cursor-pointer";
+        }
+
+        function nextQuestion() {
+            clearInterval(state.timerInterval);
+            const currentQ = state.selectedQuestions[state.currentQuestionIndex];
+            const isCorrect = (state.currentSelectedOption === currentQ.answer);
+
+            if (isCorrect) {
+                state.score++;
+                playSuccessSound();
+            } else {
+                playErrorSound();
+            }
+
+            state.currentQuestionIndex++;
+            state.currentSelectedOption = null;
+
+            if (state.currentQuestionIndex < state.selectedQuestions.length) {
+                loadQuestion();
+            } else {
+                finishQuiz();
+            }
+        }
+
+        function autoTimeOut() {
+            state.currentQuestionIndex++;
+            state.currentSelectedOption = null;
+
+            if (state.currentQuestionIndex < state.selectedQuestions.length) {
+                loadQuestion();
+            } else {
+                finishQuiz();
+            }
+        }
+
+        function useLifeline5050() {
+            if (!state.lifelines.fiftyFifty) return;
+            state.lifelines.fiftyFifty = false;
+
+            const currentQ = state.selectedQuestions[state.currentQuestionIndex];
+            const correctIdx = currentQ.answer;
+            const buttons = Array.from(document.querySelectorAll('.option-btn'));
+            
+            let removedCount = 0;
+            buttons.forEach((btn, idx) => {
+                if (idx !== correctIdx && removedCount < 2) {
+                    btn.style.visibility = 'hidden';
+                    removedCount++;
+                }
+            });
+
+            document.getElementById('lifeline-5050').disabled = true;
+            document.getElementById('lifeline-5050').classList.add('opacity-40', 'cursor-not-allowed');
+            playBeep(600, 0.15);
+        }
+
+        function useLifelineTime() {
+            if (!state.lifelines.extraTime) return;
+            state.lifelines.extraTime = false;
+            state.timer += 30;
+            updateTimerDisplay();
+
+            document.getElementById('lifeline-time').disabled = true;
+            document.getElementById('lifeline-time').classList.add('opacity-40', 'cursor-not-allowed');
+            playBeep(750, 0.2);
+        }
+
+        function useLifelineHint() {
+            if (!state.lifelines.hint) return;
+            state.lifelines.hint = false;
+
+            const currentQ = state.selectedQuestions[state.currentQuestionIndex];
+            document.getElementById('hint-text').innerText = currentQ.hint;
+            document.getElementById('hint-box').classList.remove('hidden');
+
+            document.getElementById('lifeline-hint').disabled = true;
+            document.getElementById('lifeline-hint').classList.add('opacity-40', 'cursor-not-allowed');
+            playBeep(520, 0.15);
+        }
+
+        function finishQuiz() {
+            state.isQuizActive = false;
+            state.endTime = new Date();
+            clearInterval(state.timerInterval);
+
+            const durationMs = state.endTime - state.startTime;
+            const totalSeconds = Math.floor(durationMs / 1000);
+            const formattedTime = `${Math.floor(totalSeconds / 60)}m ${totalSeconds % 60}s`;
+
+            document.getElementById('quiz-active-container').classList.add('hidden');
+            document.getElementById('quiz-results-container').classList.remove('hidden');
+
+            document.getElementById('res-team-name').innerText = state.teamName;
+            document.getElementById('res-team-members').innerText = state.teamMembers;
+            document.getElementById('res-score').innerText = `${state.score} / 20 pts`;
+            document.getElementById('res-time').innerText = formattedTime;
+
+            // Lock device attempt
+            localStorage.setItem(`quiz_done_${state.teamName.toLowerCase()}`, 'true');
+
+            if (typeof confetti === 'function') {
+                confetti({ particleCount: 150, spread: 80, origin: { y: 0.6 } });
+            }
+
+            const record = {
+                teamName: state.teamName,
+                members: state.teamMembers,
+                score: state.score,
+                timeSpent: formattedTime,
+                date: new Date().toLocaleString('es-ES')
+            };
+
+            if (typeof window.saveQuizResultToCloud === 'function') {
+                window.saveQuizResultToCloud(record);
+            }
+        }
+
+        function downloadCSVReport() {
+            const list = window.currentCloudScores || [];
+            if (list.length === 0) {
+                alert("No hay registros centralizados para exportar todavía.");
+                return;
+            }
+
+            let csvContent = "data:text/csv;charset=utf-8,";
+            csvContent += "ID,Nombre del Equipo,Integrantes del Equipo,Puntaje (Sobre 20),Tiempo Utilizado,Fecha Registro\n";
+
+            list.forEach((item, idx) => {
+                const cleanTeam = `"${(item.teamName || '').replace(/"/g, '""')}"`;
+                const cleanMembers = `"${(item.members || '').replace(/"/g, '""')}"`;
+                csvContent += `${idx + 1},${cleanTeam},${cleanMembers},${item.score},${item.timeSpent},"${item.date}"\n`;
+            });
+
+            const encodedUri = encodeURI(csvContent);
+            const link = document.createElement("a");
+            link.setAttribute("href", encodedUri);
+            link.setAttribute("download", `Reporte_Notas_Centralizado_Tema2_${new Date().toISOString().slice(0,10)}.csv`);
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+        }
+
+        function renderQuestionBank(filter = 'all') {
+            const container = document.getElementById('questions-bank-list');
+            container.innerHTML = "";
+
+            const filtered = QUESTION_BANK.filter(q => filter === 'all' || q.level === filter);
+
+            filtered.forEach((q) => {
+                const card = document.createElement('div');
+                card.className = "p-4 rounded-2xl border-2 border-pink-200 bg-pink-50/60 space-y-2 text-sm";
+                
+                let badgeClass = "bg-green-100 text-green-700";
+                if (q.level === 'medio') badgeClass = "bg-yellow-100 text-yellow-800";
+                if (q.level === 'avanzado') badgeClass = "bg-red-100 text-red-700";
+
+                const letters = ["A", "B", "C", "D"];
+                const optionsList = q.options.map((opt, i) => `
+                    <li class="${i === q.answer ? 'text-brandHotPink font-bold' : 'text-slate-600'}">
+                        <strong>${letters[i]})</strong> ${opt} ${i === q.answer ? '<i class="fa-solid fa-circle-check text-green-500 ml-1"></i> (Correcta)' : ''}
+                    </li>
+                `).join('');
+
+                card.innerHTML = `
+                    <div class="flex items-start justify-between gap-2">
+                        <span class="font-bold text-slate-800">Pregunta ${q.id}: ${q.q}</span>
+                        <span class="px-2.5 py-0.5 rounded-full text-[10px] font-extrabold uppercase ${badgeClass}">${q.level}</span>
+                    </div>
+                    <ul class="pl-4 space-y-1 text-xs">${optionsList}</ul>
+                    <p class="text-[11px] text-purple-700 italic bg-purple-50 p-2 rounded-lg border border-purple-200">
+                        <i class="fa-solid fa-lightbulb"></i> <strong>Explicación/Pista:</strong> ${q.hint}
+                    </p>
+                `;
+                container.appendChild(card);
+            });
+        }
+
+        function filterBank(level) {
+            renderQuestionBank(level);
+        }
+
+        function copyShareLink() {
+            const input = document.getElementById('share-link-input');
+            input.select();
+            document.execCommand('copy');
+            alert("¡Enlace de acceso copiado al portapapeles! Compártelo con tus estudiantes.");
+        }
+
+        function escapeHtml(str) {
+            return (str || '').replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;").replace(/'/g, "&#039;");
+        }
+    </script>
+</body>
+</html>
